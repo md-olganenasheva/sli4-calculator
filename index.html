@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SLI4-калькулятор структурно-связочного фенотипа лонного сочленения</title>
+  <meta name="description" content="SLI4 — калькулятор структурно-связочного фенотипа лонного сочленения. Свидетельство о государственной регистрации программы для ЭВМ №2026669894 от 10.07.2026." />
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#1f2937;
+      --muted:#4b5563;
+      --line:#d8dee7;
+      --soft:#f6f8fb;
+      --soft2:#fbfcfe;
+      --accent:#1d4ed8;
+      --ok:#1a7f37;
+      --warn:#b26a00;
+      --high:#c01c28;
+      --shadow:0 4px 14px rgba(16,24,40,.06);
+      --radius:14px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      padding:0;
+      font-family:Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.45;
+    }
+    .page{
+      max-width:1050px;
+      margin:0 auto;
+      padding:20px 14px 36px;
+    }
+    h1{
+      margin:0 0 6px;
+      font-size:1.75rem;
+      text-align:center;
+    }
+    .subtitle{
+      text-align:center;
+      color:var(--muted);
+      margin:0 0 14px;
+    }
+    .section,
+    .note,
+    .result,
+    .error,
+    .report-box{
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      background:#fff;
+    }
+    .section{
+      margin:0 0 16px;
+      padding:14px 16px;
+      scroll-margin-top:90px;
+    }
+    .section h2{
+      margin:0 0 12px;
+      font-size:1.15rem;
+    }
+    .section h3{
+      margin:14px 0 10px;
+      font-size:1rem;
+    }
+    .section-title-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .badge{
+      display:inline-block;
+      padding:4px 9px;
+      border-radius:999px;
+      font-size:.82rem;
+      border:1px solid #cfe0ff;
+      background:#eef4ff;
+      color:#224b98;
+    }
+    .step-nav{
+      position:sticky;
+      top:0;
+      z-index:10;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      padding:10px;
+      margin:0 0 16px;
+      background:rgba(255,255,255,.94);
+      border:1px solid var(--line);
+      border-radius:14px;
+      backdrop-filter:blur(10px);
+      box-shadow:var(--shadow);
+    }
+    .step-nav button{
+      flex:1 1 140px;
+      min-width:120px;
+      padding:10px 12px;
+      border:1px solid #bfd0f7;
+      border-radius:10px;
+      background:#eef4ff;
+      color:#173f8a;
+      cursor:pointer;
+      font-size:.95rem;
+    }
+    .step-nav button.active{
+      background:#dbe8ff;
+      border-color:#8ab0ff;
+      font-weight:700;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px 16px;
+      align-items:start;
+    }
+    .grid-3{
+      display:grid;
+      grid-template-columns:repeat(3, 1fr);
+      gap:12px 16px;
+      align-items:start;
+    }
+    .field label,
+    .field .field-label{
+      display:block;
+      margin:0 0 6px;
+      font-weight:700;
+    }
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea{
+      width:100%;
+      padding:10px 11px;
+      border:1px solid #c7d0dd;
+      border-radius:10px;
+      font-size:1rem;
+      background:#fff;
+    }
+    input[readonly]{ background:#f6f8fb; }
+    textarea{
+      min-height:82px;
+      resize:vertical;
+    }
+    .radio-group label,
+    .check-group label{
+      display:inline-flex;
+      align-items:flex-start;
+      gap:8px;
+      margin:6px 14px 0 0;
+      cursor:pointer;
+      font-weight:normal;
+    }
+    .check-group.block label,
+    .radio-group.block label{
+      display:flex;
+      margin-right:0;
+      margin-top:8px;
+    }
+    .note{
+      padding:10px 12px;
+      margin:10px 0;
+      background:var(--soft2);
+      white-space:pre-line;
+    }
+    .hint{
+      color:var(--muted);
+      font-size:.91rem;
+      margin-top:6px;
+      white-space:pre-line;
+    }
+    .subcard{
+      border:1px solid #e5e9f0;
+      background:var(--soft2);
+      border-radius:12px;
+      padding:12px;
+      margin-top:10px;
+    }
+    .buttons{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:14px;
+    }
+    button{
+      padding:13px 14px;
+      border-radius:10px;
+      border:1px solid #bcc7d6;
+      background:#fafcff;
+      cursor:pointer;
+      font-size:1rem;
+    }
+    button:hover{ background:#f1f5fb; }
+    .primary{
+      background:#eaf2ff;
+      border-color:#9fbef7;
+      color:#15408c;
+      font-weight:700;
+    }
+    .result,
+    .report-box,
+    .error{
+      padding:14px;
+      margin-top:14px;
+      white-space:pre-line;
+      display:none;
+    }
+    .result.show,
+    .report-box.show,
+    .error.show{ display:block; }
+    .result{ font-size:1.06rem; font-weight:700; }
+    .result.low{ color:var(--ok); background:#f3fbf5; border-color:#c9ebd0; }
+    .result.mid{ color:var(--warn); background:#fff8ef; border-color:#f0d8b0; }
+    .result.high{ color:var(--high); background:#fff4f4; border-color:#f3c2c2; }
+    .error{ color:#7a1f1f; background:#fff5f5; border-color:#f3c2c2; }
+    .summary-grid{
+      display:grid;
+      grid-template-columns:repeat(4, 1fr);
+      gap:10px;
+      margin-top:10px;
+    }
+    .summary-card{
+      border:1px solid #e3e8ef;
+      border-radius:12px;
+      padding:10px 12px;
+      background:#fff;
+    }
+    .summary-card .k{ color:var(--muted); font-size:.86rem; }
+    .summary-card .v{ font-weight:700; font-size:1.05rem; margin-top:4px; }
+    .calc-table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:8px;
+      font-size:.95rem;
+    }
+    .calc-table th,
+    .calc-table td{
+      padding:9px 10px;
+      border-bottom:1px solid #e8edf4;
+      vertical-align:top;
+      text-align:left;
+    }
+    .calc-table th{
+      background:#f4f8fe;
+      font-weight:700;
+    }
+    details summary{
+      cursor:pointer;
+      font-weight:700;
+      margin-bottom:8px;
+    }
+
+    .registration{
+      margin:18px 0 0;
+      padding:14px 16px;
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      background:var(--soft2);
+      color:var(--text);
+      font-size:.92rem;
+      box-shadow:var(--shadow);
+    }
+    .registration strong{ font-weight:700; }
+    .registration .reg-title{
+      font-weight:700;
+      margin-bottom:6px;
+    }
+    .registration .reg-muted{
+      color:var(--muted);
+      margin-top:6px;
+    }
+    .hidden{ display:none !important; }
+    .mono{ font-family:Consolas, Menlo, monospace; }
+    @media print{
+      .step-nav, .buttons, .print-hide{ display:none !important; }
+      body{ background:#fff; }
+      .section, .result, .report-box, .note{ box-shadow:none; break-inside:avoid; }
+    }
+    @media (max-width:920px){
+      .grid, .grid-3, .summary-grid{ grid-template-columns:1fr; }
+      .step-nav{ position:static; }
+    }
+    @media (max-width:760px){
+      .page{ padding:14px 10px 28px; }
+      button{ width:100%; }
+      .radio-group label, .check-group label{ display:flex; }
+      input[type="checkbox"], input[type="radio"]{ transform:scale(1.18); margin-top:2px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <h1>SLI4-калькулятор структурно-связочного фенотипа лонного сочленения</h1>
+  <div class="subtitle">УЗ-калькулятор для врача. Не является самостоятельным диагнозом.</div>
+  <div class="subtitle" style="font-size:.88rem; margin-top:-6px;">Свидетельство о государственной регистрации программы для ЭВМ № 2026669894 от 10.07.2026</div>
+
+  <div class="step-nav">
+    <button type="button" class="active" data-target="sec-passport" onclick="scrollToSection('sec-passport', this)">1. Паспорт</button>
+    <button type="button" data-target="sec-disc" onclick="scrollToSection('sec-disc', this)">2. Диск</button>
+    <button type="button" data-target="sec-ligaments" onclick="scrollToSection('sec-ligaments', this)">3. Связки</button>
+    <button type="button" data-target="sec-result" onclick="scrollToSection('sec-result', this)">4. Итог</button>
+  </div>
+
+  <section id="sec-passport" class="section">
+    <div class="section-title-row">
+      <h2>1. Паспортная часть</h2>
+    </div>
+    <div class="grid">
+      <div class="field">
+        <label for="patient_id">Идентификатор исследования</label>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <input type="text" id="patient_id" placeholder="Например: SLI4-20260516-0001" maxlength="40" style="flex:1 1 260px;">
+          <button type="button" onclick="generateId()" style="flex:0 0 auto;">Сгенерировать</button>
+        </div>
+        <div class="hint">Персональные данные пациентки не вносить.</div>
+      </div>
+      <div class="field">
+        <label for="visit_datetime">Дата и время расчёта</label>
+        <input type="text" id="visit_datetime" readonly>
+      </div>
+      <div class="field">
+        <label for="gestation_weeks">Срок беременности / после родов</label>
+        <input type="text" id="gestation_weeks" placeholder="Например: 34 нед. 2 дня / 2-е сутки после родов">
+      </div>
+      <div class="field">
+        <label class="field-label">Группа / клинический контекст</label>
+        <select id="clinical_context">
+          <option value="Беременная без боли">Беременная без боли</option>
+          <option value="Беременная с болью">Беременная с болью</option>
+          <option value="Послеродовый период">Послеродовый период</option>
+          <option value="Контроль">Контроль</option>
+          <option value="Другое">Другое</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="note">Алгоритм SLI4 включает 4 бинарных компонента: гипоэхогенные очаги, гиперэхогенные включения/реверберации, связочный компонент выше контрольного порога и поражение «ядра» межлобкового диска более 50%. Пороговые значения связок заданы как редактируемые константы текущей пилотной контрольной группы.</div>
+  </section>
+
+  <section id="sec-disc" class="section">
+    <div class="section-title-row">
+      <h2>2. Межлобковый диск и планиметрия</h2>
+    </div>
+
+    <div class="grid">
+      <div class="field">
+        <label class="field-label">Гипоэхогенные очаги в «ядре» межлобкового диска</label>
+        <div class="radio-group">
+          <label><input type="radio" name="hypo_foci" value="0" checked> Нет</label>
+          <label><input type="radio" name="hypo_foci" value="1"> Да</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Гиперэхогенные включения / реверберации</label>
+        <div class="radio-group">
+          <label><input type="radio" name="hyper_inclusions" value="0" checked> Нет</label>
+          <label><input type="radio" name="hyper_inclusions" value="1"> Да</label>
+        </div>
+      </div>
+    </div>
+
+    <h3>Планиметрия поражения «ядра»</h3>
+    <div class="note">Можно рассчитать категорию автоматически по площадям или выбрать категорию вручную. Для SLI4 положительным считается поражение «ядра» категории 2–3, то есть более 50%.</div>
+
+    <div class="grid">
+      <div class="field">
+        <label class="field-label">Режим ввода планиметрии</label>
+        <div class="radio-group block">
+          <label><input type="radio" name="planimetry_mode" value="auto" checked onchange="togglePlanimetryMode()"> Рассчитать по площадям</label>
+          <label><input type="radio" name="planimetry_mode" value="manual" onchange="togglePlanimetryMode()"> Выбрать категорию вручную</label>
+        </div>
+      </div>
+    </div>
+
+    <div id="autoPlanimetry" class="subcard">
+      <div class="grid-3">
+        <div class="field">
+          <label for="core_area">Площадь «ядра» межлобкового диска</label>
+          <input type="number" id="core_area" min="0" max="20" step="0.01" placeholder="см² или мм²">
+          <div class="hint">Единицы должны быть одинаковыми для обеих площадей.</div>
+        </div>
+        <div class="field">
+          <label for="lesion_area">Суммарная площадь патологически изменённых участков</label>
+          <input type="number" id="lesion_area" min="0" max="20" step="0.01" placeholder="см² или мм²">
+        </div>
+        <div class="field">
+          <label for="lesion_percent">Доля поражения «ядра», %</label>
+          <input type="number" id="lesion_percent" readonly>
+        </div>
+      </div>
+    </div>
+
+    <div id="manualPlanimetry" class="subcard hidden">
+      <div class="field">
+        <label for="manual_category">Категория поражения «ядра»</label>
+        <select id="manual_category">
+          <option value="0">0 — 0–24%</option>
+          <option value="1">1 — 25–50%</option>
+          <option value="2">2 — 51–80%</option>
+          <option value="3">3 — &gt;80%</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-card"><div class="k">Hypo+</div><div class="v" id="show_hypo">0</div></div>
+      <div class="summary-card"><div class="k">Hyper+</div><div class="v" id="show_hyper">0</div></div>
+      <div class="summary-card"><div class="k">Категория ядра</div><div class="v" id="show_core_category">0</div></div>
+      <div class="summary-card"><div class="k">Lesion≥2</div><div class="v" id="show_lesion_component">0</div></div>
+    </div>
+  </section>
+
+  <section id="sec-ligaments" class="section">
+    <div class="section-title-row">
+      <h2>3. Связочный компонент</h2>
+    </div>
+
+    <div class="note">Связочный компонент SLI4 становится положительным, если толщина верхней лобковой связки больше текущего контрольного порога или если толщина передней лобковой связки справа либо слева больше текущего контрольного порога. Отдельное поле максимальной толщины передней связки не выводится: сравнение выполняется автоматически по введённым значениям справа и слева.</div>
+
+    <div class="grid-3">
+      <div class="field">
+        <label for="upper_lig_thickness">Верхняя лобковая связка, толщина</label>
+        <input type="number" id="upper_lig_thickness" min="0" max="20" step="0.01" placeholder="мм">
+      </div>
+      <div class="field">
+        <label for="anterior_lig_right">Передняя лобковая связка справа, толщина</label>
+        <input type="number" id="anterior_lig_right" min="0" max="20" step="0.01" placeholder="мм">
+      </div>
+      <div class="field">
+        <label for="anterior_lig_left">Передняя лобковая связка слева, толщина</label>
+        <input type="number" id="anterior_lig_left" min="0" max="20" step="0.01" placeholder="мм">
+      </div>
+    </div>
+
+    <details class="subcard">
+      <summary>Настройки контрольных порогов</summary>
+      <div class="grid">
+        <div class="field">
+          <label for="upper_threshold">Порог верхней лобковой связки, мм</label>
+          <input type="number" id="upper_threshold" min="0" max="20" step="0.01" value="4.62">
+          <div class="hint">Текущий порог: &gt;4,62 мм.</div>
+        </div>
+        <div class="field">
+          <label for="anterior_threshold">Порог передней лобковой связки, мм</label>
+          <input type="number" id="anterior_threshold" min="0" max="20" step="0.01" value="4.71">
+          <div class="hint">Текущий порог: справа или слева &gt;4,71 мм.</div>
+        </div>
+      </div>
+    </details>
+
+    <div class="summary-grid">
+      <div class="summary-card"><div class="k">Верхняя связка выше порога</div><div class="v" id="show_upper_flag">0</div></div>
+      <div class="summary-card"><div class="k">Передняя справа выше порога</div><div class="v" id="show_ant_r_flag">0</div></div>
+      <div class="summary-card"><div class="k">Передняя слева выше порога</div><div class="v" id="show_ant_l_flag">0</div></div>
+      <div class="summary-card"><div class="k">LigAny&gt;P95(G0)</div><div class="v" id="show_lig_component">0</div></div>
+    </div>
+  </section>
+
+  <section id="sec-result" class="section">
+    <div class="section-title-row">
+      <h2>4. Итоговый расчёт</h2>
+    </div>
+
+    <div id="errorBox" class="error"></div>
+
+    <div class="buttons">
+      <button type="button" class="primary" onclick="calculateSLI4()">Рассчитать SLI4</button>
+      <button type="button" onclick="window.print()">Печать</button>
+      <button type="button" onclick="copyReport()">Скопировать отчёт</button>
+      <button type="button" onclick="copyJson()">Скопировать JSON</button>
+      <button type="button" onclick="resetForm()">Сбросить</button>
+    </div>
+
+    <div id="resultBox" class="result"></div>
+
+    <div id="reportBox" class="report-box">
+      <h3 style="margin-top:0;">Детализированный отчёт</h3>
+      <table class="calc-table">
+        <thead>
+          <tr><th>Компонент</th><th>Значение</th><th>Пояснение</th></tr>
+        </thead>
+        <tbody id="reportTableBody"></tbody>
+      </table>
+      <div class="note" id="interpretationBox"></div>
+      <div class="field" style="margin-top:12px;">
+        <label for="doctor_comment">Комментарий врача</label>
+        <textarea id="doctor_comment" placeholder="Необязательно: клинический контекст, качество визуализации, ограничения исследования"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <div class="registration">
+    <div class="reg-title">Сведения о государственной регистрации программы для ЭВМ</div>
+    <div><strong>Наименование:</strong> «SLI4 — калькулятор структурно-связочного фенотипа лонного сочленения».</div>
+    <div><strong>Свидетельство:</strong> № 2026669894, дата государственной регистрации — 10.07.2026.</div>
+    <div><strong>Правообладатель:</strong> Федеральное государственное бюджетное образовательное учреждение высшего образования «Башкирский государственный медицинский университет» Министерства здравоохранения Российской Федерации.</div>
+    <div><strong>Авторы:</strong> Зиганшин Айдар Миндиярович, Ненашева Ольга Егоровна.</div>
+    <div class="reg-muted">Калькулятор предназначен для структурированного ультразвукового фенотипирования и не является самостоятельным клиническим диагнозом. Результат должен интерпретироваться с учётом клинических данных и качества ультразвуковой визуализации.</div>
+  </div>
+</div>
+
+<script>
+  const DEFAULTS = {
+    UPPER_LIG_THRESHOLD_MM: 4.62,
+    ANTERIOR_LIG_THRESHOLD_MM: 4.71
+  };
+
+  let lastReportText = '';
+  let lastJson = null;
+
+  function initPage(){
+    setVisitDatetime();
+    bindAutoUpdate();
+    observeSections();
+    updateDerived();
+  }
+
+  function observeSections(){
+    const sections = document.querySelectorAll('.section');
+    const buttons = document.querySelectorAll('.step-nav button');
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting){
+          buttons.forEach(btn => btn.classList.toggle('active', btn.dataset.target === entry.target.id));
+        }
+      });
+    }, { rootMargin:'-25% 0px -60% 0px', threshold:.1 });
+    sections.forEach(s => io.observe(s));
+  }
+
+  function scrollToSection(id, btn){
+    document.getElementById(id).scrollIntoView({behavior:'smooth', block:'start'});
+    document.querySelectorAll('.step-nav button').forEach(b => b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+  }
+
+  function setVisitDatetime(){
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    document.getElementById('visit_datetime').value = `${pad(now.getDate())}.${pad(now.getMonth()+1)}.${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  }
+
+  function generateId(){
+    const dt = new Date();
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth()+1).padStart(2,'0');
+    const d = String(dt.getDate()).padStart(2,'0');
+    const rnd = String(Math.floor(1000 + Math.random()*9000));
+    document.getElementById('patient_id').value = `SLI4-${y}${m}${d}-${rnd}`;
+  }
+
+  function bindAutoUpdate(){
+    document.querySelectorAll('input, select, textarea').forEach(el => {
+      el.addEventListener('change', updateDerived);
+      if(el.type === 'number') el.addEventListener('input', updateDerived);
+    });
+  }
+
+  function selectedRadioValue(name){
+    const el = document.querySelector(`input[name="${name}"]:checked`);
+    return el ? el.value : '';
+  }
+
+  function numVal(id){
+    const el = document.getElementById(id);
+    if(!el || el.value === '') return null;
+    const v = parseFloat(String(el.value).replace(',', '.'));
+    return Number.isNaN(v) ? null : v;
+  }
+
+  function togglePlanimetryMode(){
+    const mode = selectedRadioValue('planimetry_mode');
+    document.getElementById('autoPlanimetry').classList.toggle('hidden', mode !== 'auto');
+    document.getElementById('manualPlanimetry').classList.toggle('hidden', mode !== 'manual');
+    updateDerived();
+  }
+
+  function calcCoreCategory(){
+    const mode = selectedRadioValue('planimetry_mode');
+    let percent = null;
+    let category = 0;
+
+    if(mode === 'manual'){
+      category = parseInt(document.getElementById('manual_category').value || '0', 10);
+      if(category === 0) percent = null;
+      if(category === 1) percent = null;
+      if(category === 2) percent = null;
+      if(category === 3) percent = null;
+      return { mode, percent, category, valid:true, message:'' };
+    }
+
+    const core = numVal('core_area');
+    const lesion = numVal('lesion_area');
+    if(core === null && lesion === null){
+      return { mode, percent:null, category:0, valid:true, message:'' };
+    }
+    if(core === null || core <= 0){
+      return { mode, percent:null, category:0, valid:false, message:'Планиметрия: площадь «ядра» должна быть больше 0.' };
+    }
+    if(lesion === null || lesion < 0){
+      return { mode, percent:null, category:0, valid:false, message:'Планиметрия: укажите суммарную площадь патологически изменённых участков.' };
+    }
+    if(lesion > core){
+      return { mode, percent:(lesion/core)*100, category:3, valid:false, message:'Планиметрия: площадь патологических участков больше площади «ядра». Проверьте ввод.' };
+    }
+
+    percent = (lesion / core) * 100;
+    if(percent < 25) category = 0;
+    else if(percent <= 50) category = 1;
+    else if(percent <= 80) category = 2;
+    else category = 3;
+
+    return { mode, percent, category, valid:true, message:'' };
+  }
+
+  function calcLigamentComponent(){
+    const upper = numVal('upper_lig_thickness');
+    const antR = numVal('anterior_lig_right');
+    const antL = numVal('anterior_lig_left');
+    const upperThr = numVal('upper_threshold') ?? DEFAULTS.UPPER_LIG_THRESHOLD_MM;
+    const antThr = numVal('anterior_threshold') ?? DEFAULTS.ANTERIOR_LIG_THRESHOLD_MM;
+
+    const upperFlag = upper !== null && upper > upperThr;
+    const antRFlag = antR !== null && antR > antThr;
+    const antLFlag = antL !== null && antL > antThr;
+    const component = upperFlag || antRFlag || antLFlag ? 1 : 0;
+
+    return { upper, antR, antL, upperThr, antThr, upperFlag, antRFlag, antLFlag, component };
+  }
+
+  function updateDerived(){
+    const hypo = parseInt(selectedRadioValue('hypo_foci') || '0', 10);
+    const hyper = parseInt(selectedRadioValue('hyper_inclusions') || '0', 10);
+    const core = calcCoreCategory();
+    const lig = calcLigamentComponent();
+    const lesionComponent = core.category >= 2 ? 1 : 0;
+
+    document.getElementById('lesion_percent').value = core.percent === null ? '' : core.percent.toFixed(1);
+    document.getElementById('show_hypo').textContent = String(hypo);
+    document.getElementById('show_hyper').textContent = String(hyper);
+    document.getElementById('show_core_category').textContent = String(core.category);
+    document.getElementById('show_lesion_component').textContent = String(lesionComponent);
+
+    document.getElementById('show_upper_flag').textContent = lig.upperFlag ? '1' : '0';
+    document.getElementById('show_ant_r_flag').textContent = lig.antRFlag ? '1' : '0';
+    document.getElementById('show_ant_l_flag').textContent = lig.antLFlag ? '1' : '0';
+    document.getElementById('show_lig_component').textContent = String(lig.component);
+  }
+
+  function validateInputs(){
+    const errors = [];
+    const core = calcCoreCategory();
+    if(!core.valid) errors.push(core.message);
+
+    const upperThr = numVal('upper_threshold');
+    const antThr = numVal('anterior_threshold');
+    if(upperThr === null || upperThr <= 0) errors.push('Настройки: порог верхней лобковой связки должен быть больше 0.');
+    if(antThr === null || antThr <= 0) errors.push('Настройки: порог передней лобковой связки должен быть больше 0.');
+
+    return errors;
+  }
+
+  function phenotypeByScore(score){
+    if(score === 0) return { cls:'low', title:'SLI4 = 0: структурно-связочный фенотип не выявлен по заданным компонентам', label:'SLI4=0' };
+    if(score <= 2) return { cls:'mid', title:`SLI4 = ${score}: отдельные / промежуточные структурно-связочные признаки`, label:'SLI4=1–2' };
+    return { cls:'high', title:`SLI4 = ${score}: высокий структурно-связочный фенотип`, label:'SLI4=3–4' };
+  }
+
+  function calculateSLI4(){
+    updateDerived();
+    const errors = validateInputs();
+    const errorBox = document.getElementById('errorBox');
+    const resultBox = document.getElementById('resultBox');
+    const reportBox = document.getElementById('reportBox');
+
+    if(errors.length){
+      errorBox.textContent = errors.join('\n');
+      errorBox.classList.add('show');
+      resultBox.className = 'result';
+      resultBox.textContent = '';
+      reportBox.classList.remove('show');
+      return;
+    }
+    errorBox.classList.remove('show');
+    errorBox.textContent = '';
+
+    const hypo = parseInt(selectedRadioValue('hypo_foci') || '0', 10);
+    const hyper = parseInt(selectedRadioValue('hyper_inclusions') || '0', 10);
+    const core = calcCoreCategory();
+    const lig = calcLigamentComponent();
+    const lesionComponent = core.category >= 2 ? 1 : 0;
+    const score = hypo + hyper + lig.component + lesionComponent;
+    const phenotype = phenotypeByScore(score);
+
+    resultBox.className = `result show ${phenotype.cls}`;
+    resultBox.textContent = `${phenotype.title}\nКомпоненты: Hypo+ ${hypo}; Hyper+ ${hyper}; LigAny>P95(G0) ${lig.component}; Lesion≥2 ${lesionComponent}.`;
+
+    fillReportTable({hypo, hyper, core, lig, lesionComponent, score, phenotype});
+    reportBox.classList.add('show');
+
+    const patientId = document.getElementById('patient_id').value || 'не указан';
+    const visit = document.getElementById('visit_datetime').value || '';
+    const context = document.getElementById('clinical_context').value || '';
+    const gestation = document.getElementById('gestation_weeks').value || '';
+    const comment = document.getElementById('doctor_comment').value || '';
+
+    lastJson = {
+      calculator: 'SLI4 ultrasound structural-ligamentous phenotype calculator',
+      version: '1.1',
+      registration: {
+        certificate_number: '2026669894',
+        registration_date: '10.07.2026',
+        rights_holder: 'ФГБОУ ВО БГМУ Минздрава России',
+        authors: ['Зиганшин Айдар Миндиярович', 'Ненашева Ольга Егоровна']
+      },
+      patient_id: patientId,
+      visit_datetime: visit,
+      clinical_context: context,
+      gestation_or_postpartum: gestation,
+      inputs: {
+        hypoechoic_foci: Boolean(hypo),
+        hyperechoic_inclusions_reverberations: Boolean(hyper),
+        core_area: numVal('core_area'),
+        lesion_area: numVal('lesion_area'),
+        core_lesion_percent: core.percent,
+        core_lesion_category: core.category,
+        upper_pubic_ligament_thickness_mm: lig.upper,
+        anterior_pubic_ligament_right_mm: lig.antR,
+        anterior_pubic_ligament_left_mm: lig.antL,
+        upper_ligament_threshold_mm: lig.upperThr,
+        anterior_ligament_threshold_mm: lig.antThr
+      },
+      components: {
+        Hypo_plus: hypo,
+        Hyper_plus: hyper,
+        LigAny_gt_P95_G0: lig.component,
+        Lesion_ge_2: lesionComponent
+      },
+      SLI4: score,
+      phenotype: phenotype.label,
+      doctor_comment: comment
+    };
+
+    lastReportText = buildPlainReport(lastJson);
+  }
+
+  function fillReportTable(data){
+    const tb = document.getElementById('reportTableBody');
+    const pctText = data.core.percent === null ? 'не рассчитывалась / выбран ручной режим' : `${data.core.percent.toFixed(1)}%`;
+    const rows = [
+      ['Hypo+', data.hypo, data.hypo ? 'Гипоэхогенные очаги выявлены.' : 'Гипоэхогенные очаги не отмечены.'],
+      ['Hyper+', data.hyper, data.hyper ? 'Гиперэхогенные включения/реверберации выявлены.' : 'Гиперэхогенные включения/реверберации не отмечены.'],
+      ['Категория поражения «ядра»', data.core.category, `Доля поражения: ${pctText}. Категория 0: 0–24%; 1: 25–50%; 2: 51–80%; 3: >80%.`],
+      ['Lesion≥2', data.lesionComponent, data.lesionComponent ? 'Поражение «ядра» >50%; компонент SLI4 положительный.' : 'Поражение «ядра» ≤50%; компонент SLI4 отрицательный.'],
+      ['Связочный компонент', data.lig.component, `Верхняя связка > ${data.lig.upperThr} мм: ${data.lig.upperFlag ? 'да' : 'нет'}; передняя справа > ${data.lig.antThr} мм: ${data.lig.antRFlag ? 'да' : 'нет'}; передняя слева > ${data.lig.antThr} мм: ${data.lig.antLFlag ? 'да' : 'нет'}.`],
+      ['SLI4', data.score, data.phenotype.title]
+    ];
+    tb.innerHTML = rows.map(r => `<tr><td>${escapeHtml(r[0])}</td><td>${escapeHtml(String(r[1]))}</td><td>${escapeHtml(r[2])}</td></tr>`).join('');
+
+    const interpretation = document.getElementById('interpretationBox');
+    interpretation.textContent = interpretationText(data.score);
+  }
+
+  function interpretationText(score){
+    if(score === 0){
+      return 'Интерпретация: по четырём компонентам SLI4 структурно-связочный фенотип не выявлен. Итог не отменяет клиническую оценку, оценку боли, функционального статуса и динамическое наблюдение при наличии жалоб.';
+    }
+    if(score <= 2){
+      return 'Интерпретация: выявлены отдельные или промежуточные структурно-связочные признаки. Рекомендуется сопоставление с NRS, PMI, клинической картиной и качеством визуализации; при необходимости — динамическое наблюдение.';
+    }
+    return 'Интерпретация: высокий структурно-связочный фенотип SLI4=3–4. Это основание для более внимательного клинико-функционального сопоставления и динамического наблюдения. Калькулятор не определяет акушерскую тактику самостоятельно.';
+  }
+
+  function buildPlainReport(obj){
+    return [
+      'SLI4-калькулятор структурно-связочного фенотипа лонного сочленения',
+      'Свидетельство о государственной регистрации программы для ЭВМ № 2026669894 от 10.07.2026',
+      'Правообладатель: ФГБОУ ВО БГМУ Минздрава России',
+      'Авторы: Зиганшин А.М., Ненашева О.Е.',
+      `ID: ${obj.patient_id}`,
+      `Дата/время: ${obj.visit_datetime}`,
+      `Контекст: ${obj.clinical_context}`,
+      `Срок/период: ${obj.gestation_or_postpartum || 'не указан'}`,
+      '',
+      `Hypo+: ${obj.components.Hypo_plus}`,
+      `Hyper+: ${obj.components.Hyper_plus}`,
+      `LigAny>P95(G0): ${obj.components.LigAny_gt_P95_G0}`,
+      `Lesion≥2: ${obj.components.Lesion_ge_2}`,
+      `SLI4: ${obj.SLI4}`,
+      `Фенотип: ${obj.phenotype}`,
+      '',
+      `Комментарий врача: ${obj.doctor_comment || 'нет'}`,
+      '',
+      'Примечание: расчёт является инструментом структурированного эхографического фенотипирования и не является самостоятельным диагнозом.'
+    ].join('\n');
+  }
+
+  function copyReport(){
+    if(!lastReportText) calculateSLI4();
+    if(!lastReportText) return;
+    navigator.clipboard.writeText(lastReportText).then(() => alert('Отчёт скопирован.'));
+  }
+
+  function copyJson(){
+    if(!lastJson) calculateSLI4();
+    if(!lastJson) return;
+    navigator.clipboard.writeText(JSON.stringify(lastJson, null, 2)).then(() => alert('JSON скопирован.'));
+  }
+
+  function resetForm(){
+    if(!confirm('Сбросить все введённые данные?')) return;
+    document.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(el => el.value = '');
+    document.querySelectorAll('input[type="radio"]').forEach(el => {
+      if(el.name === 'hypo_foci' && el.value === '0') el.checked = true;
+      if(el.name === 'hyper_inclusions' && el.value === '0') el.checked = true;
+      if(el.name === 'planimetry_mode' && el.value === 'auto') el.checked = true;
+    });
+    document.getElementById('manual_category').value = '0';
+    document.getElementById('clinical_context').value = 'Беременная без боли';
+    document.getElementById('upper_threshold').value = DEFAULTS.UPPER_LIG_THRESHOLD_MM;
+    document.getElementById('anterior_threshold').value = DEFAULTS.ANTERIOR_LIG_THRESHOLD_MM;
+    setVisitDatetime();
+    togglePlanimetryMode();
+    document.getElementById('resultBox').className = 'result';
+    document.getElementById('resultBox').textContent = '';
+    document.getElementById('reportBox').classList.remove('show');
+    document.getElementById('errorBox').classList.remove('show');
+    lastReportText = '';
+    lastJson = null;
+    updateDerived();
+  }
+
+  function escapeHtml(str){
+    return str.replace(/[&<>'"]/g, tag => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[tag]));
+  }
+
+  window.addEventListener('DOMContentLoaded', initPage);
+</script>
+</body>
+</html>
